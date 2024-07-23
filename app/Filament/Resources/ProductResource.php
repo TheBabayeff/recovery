@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use App\Filament\Resources\ProductResource\Widgets\ProductStats;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -70,6 +71,7 @@ class ProductResource extends Resource
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('id_number')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('date')
                     ->date()
@@ -84,7 +86,32 @@ class ProductResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('brand')
+                    ->relationship('brand', 'name')
+                    ->label('Brand'),
+                Tables\Filters\Filter::make('id_number')
+                    ->label('ID Number')
+                    ->query(function (Builder $query) {
+                        // This will add sorting for id_number by ignoring the first character
+                        $query->orderByRaw('CAST(SUBSTRING(id_number, 2) AS UNSIGNED) ASC');
+                    })
+                    ->form([
+                        Forms\Components\Select::make('order')
+                            ->options([
+                                'asc' => 'Ascending',
+                                'desc' => 'Descending',
+                            ])
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, Builder $query) {
+                                if ($state === 'asc') {
+                                    $query->orderByRaw('CAST(SUBSTRING(id_number, 2) AS UNSIGNED) ASC');
+                                } else {
+                                    $query->orderByRaw('CAST(SUBSTRING(id_number, 2) AS UNSIGNED) DESC');
+                                }
+                            }),
+                    ]),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -103,6 +130,17 @@ class ProductResource extends Resource
         ];
     }
 
+    public static function getWidgets(): array
+    {
+        return [
+            ProductStats::class,
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->orderBy('created_at', 'DESC');
+    }
     public static function getPages(): array
     {
         return [
@@ -123,4 +161,5 @@ class ProductResource extends Resource
     {
         return Auth::user()->role === 'admin';
     }
+
 }

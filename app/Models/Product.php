@@ -13,6 +13,7 @@ class Product extends Model
 
     protected $fillable = [
         'size',
+        'brand_id',
         'model',
         'family',
         'fw',

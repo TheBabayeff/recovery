@@ -71,7 +71,7 @@ class DownloadPdfController extends Controller
                            <tr>
                                <td>{$record->engineer_note}</td>
                            </tr>
-                       </table><br><br><br>";
+                       </table><br>";
         }
 
         $invoice->notes($notes);
